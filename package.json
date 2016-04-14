@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "name": "nmsg-rpc",
+  "description": "RPC event based router for JavaScript bi-directional messaging",
+  "main": "index.js",
+
+  "keywords": [
+    "nmsg",
+    "rpc",
+    "nmsg-rpc",
+    "node-messenger",
+    "messenger",
+    "ipc",
+    "inter-process",
+    "communication",
+    "scoket",
+    "websocket",
+    "sockjs",
+    "socket.io"
+  ],
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/streamich/nmsg"
+  },
+
+  "scripts": {
+    "start": "npm i -g tsd mocha && tsd install node && tsd install mocha && tsd install chai",
+    "typing": "node ./scripts/dts.js",
+    "test": "mocha"
+  },
+
+  "dependencies": {
+    "msgpack-lite":     "0.1.17"
+  },
+
+  "devDependencies": {
+    "dts-generator":    "1.7.0",
+    "chai":             "*"
+  }
+
+}
