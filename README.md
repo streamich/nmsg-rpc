@@ -127,6 +127,10 @@ Generate `nmsg-rpc.d.ts` typing file:
 
     npm run typing
     
+Publishing
+    
+    npm publish
+    
 ## License
 
 This is free and unencumbered software released into the public domain.
