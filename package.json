@@ -1,5 +1,5 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "name": "nmsg-rpc",
   "description": "RPC event based router for JavaScript bi-directional messaging",
   "main": "index.js",
