@@ -77,7 +77,7 @@ declare module 'nmsg-rpc/rpc' {
 	}
 	export class RouterBuffered extends Router {
 	    cycle: number;
-	    timer: any;
+	    protected timer: any;
 	    protected buffer: FrameList;
 	    protected flush(): void;
 	    protected sendData(data: any): void;

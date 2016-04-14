@@ -22,7 +22,8 @@
     "url": "https://github.com/streamich/nmsg-rpc/"
   },
   "scripts": {
-    "prepublish": "npm run typing && git add -A && git commit -m \"Publishing\" && npm version patch && git push -u origin master",
+    "mypublish": "npm run typing && git add -A && git commit -m \"Publishing\" && npm version patch && git push -u origin master && npm publish",
+    "postpublish": "rm npm-debug.log",
     "start": "npm i -g tsd mocha && tsd install node && tsd install mocha && tsd install chai",
     "typing": "node ./scripts/dts.js",
     "test": "mocha"

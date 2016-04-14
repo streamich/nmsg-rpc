@@ -315,7 +315,7 @@ export class RouterBuffered extends Router {
 
     cycle = 5; // Milliseconds for how long to buffer requests.
 
-    timer: any = 0;
+    protected timer: any = 0;
 
     protected buffer: FrameList = [];
 
