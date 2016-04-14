@@ -273,52 +273,54 @@ var Router = (function () {
         return this;
     };
     // Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
-    Router.Buffered = (function (_super) {
-        __extends(class_1, _super);
-        function class_1() {
-            _super.apply(this, arguments);
-            this.cycle = 5; // Milliseconds for how long to buffer requests.
-            this.timer = 0;
-            this.buffer = [];
-        }
-        class_1.prototype.flush = function () {
-            var data = { b: this.buffer };
-            this.send(data);
-            this.buffer = [];
-        };
-        class_1.prototype.sendData = function (data) {
-            this.buffer.push(data);
-            this.startTimer();
-        };
-        class_1.prototype.startTimer = function () {
-            var _this = this;
-            if (!this.timer) {
-                this.timer = setTimeout(function () {
-                    _this.timer = 0;
-                    _this.flush();
-                }, this.cycle);
-            }
-        };
-        class_1.prototype.onmessage = function (msg) {
-            // console.log('msg', msg);
-            if (typeof msg != 'object')
-                return;
-            if (msg.b) {
-                if (!(msg.b instanceof Array))
-                    return;
-                for (var _i = 0, _a = msg.b; _i < _a.length; _i++) {
-                    var fmsg = _a[_i];
-                    _super.prototype.onmessage.call(this, fmsg);
-                }
-            }
-            else
-                _super.prototype.onmessage.call(this, msg);
-        };
-        return class_1;
-    }(Router));
+    Router.Buffered = RouterBuffered;
     return Router;
 }());
 exports.Router = Router;
+var RouterBuffered = (function (_super) {
+    __extends(RouterBuffered, _super);
+    function RouterBuffered() {
+        _super.apply(this, arguments);
+        this.cycle = 5; // Milliseconds for how long to buffer requests.
+        this.timer = 0;
+        this.buffer = [];
+    }
+    RouterBuffered.prototype.flush = function () {
+        var data = { b: this.buffer };
+        this.send(data);
+        this.buffer = [];
+    };
+    RouterBuffered.prototype.sendData = function (data) {
+        this.buffer.push(data);
+        this.startTimer();
+    };
+    RouterBuffered.prototype.startTimer = function () {
+        var _this = this;
+        if (!this.timer) {
+            this.timer = setTimeout(function () {
+                _this.timer = 0;
+                _this.flush();
+            }, this.cycle);
+        }
+    };
+    RouterBuffered.prototype.onmessage = function (msg) {
+        // console.log('msg', msg);
+        if (typeof msg != 'object')
+            return;
+        if (msg.b) {
+            if (!(msg.b instanceof Array))
+                return;
+            for (var _i = 0, _a = msg.b; _i < _a.length; _i++) {
+                var fmsg = _a[_i];
+                _super.prototype.onmessage.call(this, fmsg);
+            }
+        }
+        else
+            _super.prototype.onmessage.call(this, msg);
+    };
+    return RouterBuffered;
+}(Router));
+exports.RouterBuffered = RouterBuffered;
 // A collection of API functions.
 var Api = (function () {
     function Api() {

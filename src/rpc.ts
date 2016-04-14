@@ -26,9 +26,9 @@ export interface IFrameDataResponse extends IFrameData {
     f: number;      // Callback pos, index of the callback which was called.
 }
 
-type FrameList = (IFrameDataInitiation | IFrameDataResponse)[];
+export type FrameList = (IFrameDataInitiation | IFrameDataResponse)[];
 
-interface IFrameDataBuffered {
+export interface IFrameDataBuffered {
     b: FrameList; // B for bulk.
 }
 
@@ -191,43 +191,7 @@ export class FrameIncoming extends Frame {
 export class Router {
 
     // Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
-    static Buffered = class extends Router {
-
-        cycle = 5; // Milliseconds for how long to buffer requests.
-
-        timer: any = 0;
-
-        protected buffer: FrameList = [];
-
-        protected flush() {
-            var data: IFrameDataBuffered = {b: this.buffer};
-            this.send(data);
-            this.buffer = [];
-        }
-
-        protected sendData(data) {
-            this.buffer.push(data);
-            this.startTimer();
-        }
-
-        protected startTimer() {
-            if(!this.timer) {
-                this.timer = setTimeout(() => {
-                    this.timer = 0;
-                    this.flush();
-                }, this.cycle);
-            }
-        }
-
-        onmessage(msg) {
-            // console.log('msg', msg);
-            if(typeof msg != 'object') return;
-            if(msg.b) { // Buffered bulk request.
-                if(!(msg.b instanceof Array)) return;
-                for(var fmsg of msg.b) super.onmessage(fmsg);
-            } else super.onmessage(msg);
-        }
-    };
+    static Buffered = RouterBuffered;
 
     latency = 500; // Client to server latency in milliseconds, expected.
 
@@ -339,7 +303,45 @@ export class Router {
         this.dispatch(frame);
         return this;
     }
+}
 
+
+export class RouterBuffered extends Router {
+
+    cycle = 5; // Milliseconds for how long to buffer requests.
+
+    timer: any = 0;
+
+    protected buffer: FrameList = [];
+
+    protected flush() {
+        var data: IFrameDataBuffered = {b: this.buffer};
+        this.send(data);
+        this.buffer = [];
+    }
+
+    protected sendData(data) {
+        this.buffer.push(data);
+        this.startTimer();
+    }
+
+    protected startTimer() {
+        if(!this.timer) {
+            this.timer = setTimeout(() => {
+                this.timer = 0;
+                this.flush();
+            }, this.cycle);
+        }
+    }
+
+    onmessage(msg) {
+        // console.log('msg', msg);
+        if(typeof msg != 'object') return;
+        if(msg.b) { // Buffered bulk request.
+            if(!(msg.b instanceof Array)) return;
+            for(var fmsg of msg.b) super.onmessage(fmsg);
+        } else super.onmessage(msg);
+    }
 }
 
 
