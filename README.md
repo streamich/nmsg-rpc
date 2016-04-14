@@ -6,10 +6,10 @@ as a generic RPC router for any bi-directional messenger to create event-based r
 Supports sending multiple callbacks as arguments, where callbacks can be
 nested arbitrarily deep.
 
-Use with you `SockJS`, `socket.io` and other bi-directional messaging 
-services to create event based routing.
+Use with your `SockJS`, `socket.io` and other bi-directional messaging 
+sockets to create event based routing. This package has no dependencies.
 
-Can be used with any messenger that implements bi-directional communication like:
+Can be used with any socket that implements bi-directional communication like:
 
 ```ts
 interface ISocket {
@@ -23,7 +23,7 @@ Below is an example, let's say you have a server and a client that both have
 that you can use to communicate like follows:
 
 ```ts
-class Socket implements rpc.ISocket {
+class Socket implements ISocket {
     connectedToSocket: Socket = null;
     onmessage: (msg: any) => void;
     send(msg: any) {
@@ -81,8 +81,8 @@ var router = new rpc.Router.Buffered(socket);
 
 ## `rpc.Router.Buffered`
 
-Is the same as `rpc.Router` except it buffers all outgoing `.emit()` calls
-for 5 milliseconds and then combines them into one bulk request and flushed it.
+`rpc.Router.Buffered` is almost the same as `rpc.Router` except it buffers all outgoing `.emit()` calls
+for 5 milliseconds and then combines them into one bulk request and flushes it, thus combining many small calls into one bigger request.
 
 ## `rpc.Api`
 
@@ -107,3 +107,6 @@ var router = new rpc.Router(socket);
 router.setApi(api);
 ```
 
+## Examples
+
+See [./examples](./examples) folder.
