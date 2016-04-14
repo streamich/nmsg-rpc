@@ -1,2 +1,1 @@
-import * as rpc from './src/rpc';
-export = rpc;
+export * from './src/rpc';

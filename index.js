@@ -1,3 +1,5 @@
 "use strict";
-var rpc = require('./src/rpc');
-module.exports = rpc;
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+__export(require('./src/rpc'));
