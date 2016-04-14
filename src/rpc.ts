@@ -190,13 +190,11 @@ export class FrameIncoming extends Frame {
 
 export class Router {
 
-    // Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
-    static Buffered = RouterBuffered;
-
     latency = 500; // Client to server latency in milliseconds, expected.
 
     // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
     protected frame: {[id: number]: FrameOutgoing} = {};
+    protected timer: {[id: number]: any} = {};
 
     // This function is overwritten by the user.
     send: (data) => void;
@@ -254,7 +252,7 @@ export class Router {
             this.frame[frame.id] = frame;
 
             // Remove this frame after some timeout, if callbacks not called.
-            setTimeout(() => { delete this.frame[frame.id]; }, frame.timeout + this.latency);
+            this.timer[frame.id] = setTimeout(() => { delete this.frame[frame.id]; }, frame.timeout + this.latency);
         }
 
         var data = frame.serialize();
@@ -268,7 +266,13 @@ export class Router {
         request.processResponse(frame);
 
         // Remove the original request frame, if all callbacks processed.
-        if(!request.hasCallbacks()) delete this.frame[request.id];
+        if(!request.hasCallbacks()) {
+            var id = request.id;
+            delete this.frame[id];
+            var timer = this.timer[id];
+            if(timer) clearTimeout(timer);
+            delete this.timer[id];
+        }
     }
 
     constructor(socket?: ISocket) {
@@ -306,6 +310,7 @@ export class Router {
 }
 
 
+// Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
 export class RouterBuffered extends Router {
 
     cycle = 5; // Milliseconds for how long to buffer requests.

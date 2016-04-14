@@ -71,17 +71,17 @@ client_router.emit('ping', (result) => {
 Creating a router:
 
 ```ts
-var router = new rpc.Router.Buffered; // or rpc.Router
+var router = new rpc.RouterBuffered; // or rpc.Router
 router.send = (msg) => { socket.send(msg); }
 socket.onmessage = (msg) => { router.onmessage(msg); };
 
 // Or simply:
-var router = new rpc.Router.Buffered(socket);
+var router = new rpc.RouterBuffered(socket);
 ```
 
-## `rpc.Router.Buffered`
+## `rpc.RouterBuffered`
 
-`rpc.Router.Buffered` is almost the same as `rpc.Router` except it buffers all outgoing `.emit()` calls
+`rpc.RouterBuffered` is almost the same as `rpc.Router` except it buffers all outgoing `.emit()` calls
 for 5 milliseconds and then combines them into one bulk request and flushes it, thus combining many small calls into one bigger request.
 
 ## `rpc.Api`
@@ -119,7 +119,7 @@ Getting started:
 
     npm run start
 
-Testing
+Testing:
 
     npm run test
     
@@ -127,7 +127,7 @@ Generate `nmsg-rpc.d.ts` typing file:
 
     npm run typing
     
-Publishing
+Publishing:
     
     npm publish
     

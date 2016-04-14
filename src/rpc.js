@@ -171,6 +171,7 @@ var Router = (function () {
         this.latency = 500; // Client to server latency in milliseconds, expected.
         // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
         this.frame = {};
+        this.timer = {};
         this.api = null;
         // List of subscriber functions .on()
         // TODO:
@@ -230,7 +231,7 @@ var Router = (function () {
         if (frame.hasCallbacks()) {
             this.frame[frame.id] = frame;
             // Remove this frame after some timeout, if callbacks not called.
-            setTimeout(function () { delete _this.frame[frame.id]; }, frame.timeout + this.latency);
+            this.timer[frame.id] = setTimeout(function () { delete _this.frame[frame.id]; }, frame.timeout + this.latency);
         }
         var data = frame.serialize();
         // console.log('dispatch', data);
@@ -242,8 +243,14 @@ var Router = (function () {
             return; // Cannot find the original request.
         request.processResponse(frame);
         // Remove the original request frame, if all callbacks processed.
-        if (!request.hasCallbacks())
-            delete this.frame[request.id];
+        if (!request.hasCallbacks()) {
+            var id = request.id;
+            delete this.frame[id];
+            var timer = this.timer[id];
+            if (timer)
+                clearTimeout(timer);
+            delete this.timer[id];
+        }
     };
     Router.prototype.setApi = function (api) {
         this.api = api;
@@ -272,11 +279,10 @@ var Router = (function () {
         this.dispatch(frame);
         return this;
     };
-    // Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
-    Router.Buffered = RouterBuffered;
     return Router;
 }());
 exports.Router = Router;
+// Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
 var RouterBuffered = (function (_super) {
     __extends(RouterBuffered, _super);
     function RouterBuffered() {

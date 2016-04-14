@@ -51,10 +51,12 @@ declare module 'nmsg-rpc/rpc' {
 	    unserialize(data: any, onCallback: any): void;
 	}
 	export class Router {
-	    static Buffered: typeof RouterBuffered;
 	    latency: number;
 	    protected frame: {
 	        [id: number]: FrameOutgoing;
+	    };
+	    protected timer: {
+	        [id: number]: any;
 	    };
 	    send: (data) => void;
 	    api: Api;
