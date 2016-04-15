@@ -1,0 +1,20 @@
+<html>
+<head>
+<script src="../../dist/nmsg-rpc.js"></script>
+<script>
+
+var router = new nmsg.rpc.Router;
+router.send = function(obj) { localStorage.tab2 = JSON.stringify(obj); };
+
+setInterval(function() {
+    var obj = localStorage.tab1;
+    if(obj) router.onmessage(JSON.parse(obj));
+}, 100);
+
+router.emit('Hello there', function(response) {
+    console.log(response); // Hello back
+});
+
+</script>
+</head>
+</html>

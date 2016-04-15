@@ -1,0 +1,22 @@
+<html>
+<head>
+<script src="../../dist/nmsg-rpc.js"></script>
+<script>
+
+// Create our `rpc.Router` using <iframe/>'s `.postMessage()` and `.onmessage` methods.
+var router = new nmsg.rpc.Router;
+router.send = function(obj) {
+    window.top.postMessage(JSON.stringify(obj), '*');
+};
+window.addEventListener('message', function(event) {
+    router.onmessage(JSON.parse(event.data));
+});
+
+// Define our API.
+router.on('ping', function(callback) {
+    callback('pong');
+});
+
+</script>
+</head>
+</html>

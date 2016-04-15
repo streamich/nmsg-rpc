@@ -94,7 +94,3 @@ declare module 'nmsg-rpc/rpc' {
 	}
 
 }
-declare module 'nmsg-rpc' {
-	import main = require('nmsg-rpc');
-	export = main;
-}

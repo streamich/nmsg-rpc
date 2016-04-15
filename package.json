@@ -2,7 +2,7 @@
   "version": "1.0.6",
   "name": "nmsg-rpc",
   "description": "RPC event based router for JavaScript bi-directional messaging",
-  "main": "index.js",
+  "main": "src/rpc.js",
   "keywords": [
     "nmsg",
     "rpc",
@@ -23,13 +23,17 @@
   },
   "scripts": {
     "mypublish": "npm run typing && git add -A && git commit -m \"Publishing\" && npm version patch && git push -u origin master && npm publish",
-    "start": "npm i -g tsd mocha && tsd install node && tsd install mocha && tsd install chai",
+    "start": "npm i -g tsd mocha webpack uglify-js && tsd install node && tsd install mocha && tsd install chai",
     "typing": "node ./scripts/dts.js",
-    "test": "mocha"
+    "test": "mocha",
+    "dist-build": "webpack",
+    "dist-min": "uglifyjs dist/nmsg-rpc.js -o dist/nmsg-rpc.min.js --compress --mangle --source-map dist/nmsg-rpc.min.js.map",
+    "dist": "npm run dist-build && npm run dist-min"
   },
   "dependencies": {},
   "devDependencies": {
     "dts-generator": "1.7.0",
-    "chai": "*"
+    "chai": "*",
+    "webpack": "*"
   }
 }

@@ -1,0 +1,25 @@
+<html>
+<body>
+    <iframe id="iframe" src="./iframe.html"></iframe>
+    <script src="../../dist/nmsg-rpc.js"></script>
+    <script>
+var iframe = document.getElementById('iframe'); // Get a reference to your <iframe/> somehow.
+iframe.onload = function() { // Wait until <iframe/> loads.
+
+    // Create `rpc.Router`.
+    var router = new nmsg.rpc.Router;
+    router.send = function(obj) {
+        iframe.contentWindow.postMessage(JSON.stringify(obj), '*');
+    };
+    window.addEventListener('message', function(event) {
+        router.onmessage(JSON.parse(event.data));
+    });
+
+    // Communicate with the <iframe/>
+    router.emit('ping', function(res) {
+        console.log('ping > ' + res); // ping > pong
+    });
+};
+    </script>
+</body>
+</html>

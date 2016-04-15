@@ -1,0 +1,21 @@
+<html>
+<body>
+<script src="../../dist/nmsg-rpc.min.js"></script>
+<script>
+
+// Create a web `Worker`.
+var worker = new Worker('worker.js');
+
+// Create our `rpc.Router` to talk with the `Worker`.
+var router = new nmsg.rpc.Router;
+router.send = worker.postMessage.bind(worker);
+worker.onmessage = function(e) { router.onmessage(e.data); };
+
+// Send messages to the `Worker`.
+router.emit('calculate', '1 + 1', function(result) {
+    console.log(result); // 2
+});
+
+</script>
+</body>
+</html>
