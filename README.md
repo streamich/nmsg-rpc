@@ -1,13 +1,23 @@
 # RPC (Remote Procedure Calls) for Node.js Messengers
 
+> **What is `nmsg-rpc`?**
+
+> Let's say you have two connected sockets and all they can do is send and receive
+messages from each other out of order, but you want to do request/response
+type of communication or use `.on('event', cb)` and `.emit('event', data, cb)`
+event-based routing -- that's where `nmsg-rpc` comes in.
+
 This module has been extracted from [nmsg](http://npmjs.com/packages/nmsg)
 as a generic RPC router for any bi-directional messenger to create event-based routing.
 
-Supports sending multiple callbacks as arguments, where callbacks can be
-nested arbitrarily deep.
-
-Use with your `SockJS`, `socket.io` and other bi-directional messaging 
-sockets to create event based routing. This package has no dependencies.
+*Features:*
+ - Send multiple callbacks using `.emit('event', cb1, 'data', cb2, cb3)`
+ - Callbacks can be nested arbitrarily deep, i.e, your response can have callbacks
+ inside them as well, and responses to reponse too, etc...
+ - On the server, provides `rpc.Api` class where you define your API only
+ once instead of adding event using `.on()` to every new connection.
+ - Has no dependencies at ~350 lines of code.
+ - See examples below for usave with `SockJS` and `socket.io`
 
 Can be used with any socket that implements bi-directional communication like:
 
@@ -18,81 +28,61 @@ interface ISocket {
 }
 ```
 
-Below is an example, let's say you have a server and a client that both have
-`.send(msg: any)` method and `.onmessage: (msg: any) => void` event callback property,
-that you can use to communicate like follows:
+Usage:
 
 ```ts
-class Socket implements ISocket {
-    connectedToSocket: Socket = null;
-    onmessage: (msg: any) => void;
-    send(msg: any) {
-        this.connectedToSocket.onmessage(msg);
-    }
-}
+import * as rpc from 'nmsg-rpc'; // var rpc = require('nmsg-rpc');
 
-var server = new Socket;
-var client = new Socket;
-server.connectedToSocket = client;
-client.connectedToSocket = server;
+var socket: ISocket; // Socket that can send message and receive messages.
+var router = new rpc.Router;
 
-client.onmessage = (msg) => {
-    console.log('Client received:', msg)
-};
-server.send('Simple message');
-// Client received: Simple message
+// Proxy the messages to your `router`.
+router.send = (obj) => { socket.send(obj); };
+socket.onmessage = (obj) => { router.onmessage(obj); };
 ```
 
-Now you can wrap those into `rpc.Router` to create event-based API and add
-ability to send *callbacks* as arguments:
+You do this for both of your sockets: the server one and the client one. Now,
+you can use your newly created `router` like so:
 
-```ts
-import * as rpc from 'nmsg-rpc';
-
-var server_router = new rpc.Router(server);
-var client_router = new rpc.Router(client);
-
-server_router
-    .on('hello', () => {
-        console.log('Hello World');
-    })
-    .on('ping', (callback) => {
-        callback('pong');
-    });
-
-client_router.emit('hello');
-client_router.emit('ping', (result) => {
-    console.log(`ping > ${result}`);
+```js
+// On server
+router.on('ping', function(callback) {
+    callbaack('pong');
 });
-// Hello World
-// ping > pong
+
+// On client
+router.emit('ping', function(result) {
+    console.log(result); // pong
+});
 ```
 
-Creating a router:
+## Reference
+
+### `rpc.Router`
 
 ```ts
-var router = new rpc.RouterBuffered; // or rpc.Router
-router.send = (msg) => { socket.send(msg); }
-socket.onmessage = (msg) => { router.onmessage(msg); };
-
-// Or simply:
-var router = new rpc.RouterBuffered(socket);
+class Router {
+    send: (data) => void;
+    onmessage(msg: any): void;
+    onerror: (err) => void;
+    setApi(api: Api): this;
+    on(event: string, callback: TeventCallback): this;
+    emit(event: string, ...args: any[]): this;
+}
 ```
 
-You cane use wildcard `"*"` event to listen to all events, like so:
+ - `.send(data)` -- you have to implement this function.
+ - `.onmessage(msg)` -- you have to call this function when new messages arrive.
+ - `.on()` and `.emit()` -- use these two methods to do all your communication between the processes.
+ - `.onerror(err)` -- you can implement this function to listen for parsing errors.
 
-```ts
-router.on("*", function(event, ...args: any[]) {
-    // Do something
-}); 
-```
-
-## `rpc.RouterBuffered`
+### `rpc.RouterBuffered`
 
 `rpc.RouterBuffered` is almost the same as `rpc.Router` except it buffers all outgoing `.emit()` calls
-for 5 milliseconds and then combines them into one bulk request and flushes it, thus combining many small calls into one bigger request.
+for 10 milliseconds and then combines them into one bulk request and flushes it, thus combining many small
+calls into one bigger request.
 
-## `rpc.Api`
+### `rpc.Api`
 
 On server side you actually don't want to add `.on()` event callbacks for every
 socket. Imagine you had 1,000 `.on()` callbacks for each socket and 1,000
@@ -111,7 +101,7 @@ var api = new rpc.Api()
         method3: function() { /*...*/ },
     });
     
-var router = new rpc.Router(socket);
+var router = new rpc.Router;
 router.setApi(api);
 ```
 
@@ -119,30 +109,24 @@ router.setApi(api);
 
 ## Examples
 
-At only 344 lines of code (as of this writing) and no external dependencies, `nmsg-rpc` is lightweight
-enough for you to use in almost any project.
-
-Originally, `nmsg-rpc` is part of the [`nmsg`](http://npmjs.com/package/nmsg) project but it is so useful
-on its own that we have carved it out into a standalone package.
+Originally `nmsg-rpc` was part of the [`nmsg`](http://npmjs.com/package/nmsg) project but it is so useful
+on its own that we have carved it out into a standalone package. At only 344 lines of code (as of this writing)
+and no external dependencies, `nmsg-rpc` is lightweight enough for you to use in almost any project.
 
 Below we will take a look how `nmsg-rpc` can be used to improve communication
-for the following JS services:
+for the following cases:
 
- - Talking with web `Worker`
+ - Talking with a web `Worker`
  - Talking with `<iframe/>` or other windows using `.postMessage()`
- - `window.localStorage` as communication channel between browser tabs
+ - Using `window.localStorage` as a communication channel between browser tabs
  - Interface for `cluster`'s master thread and forked workers in Node.js
- 
- - SockJS
- 
- - `process.send()`
- - socket.io
- - Websocket
+ - Add event-base routing to `SockJS`
+ - Improve routing for `socket.io`
  
  See [./examples](./examples) folder for all the examples.
  
  
-### Talking with web `Worker`
+### Talking with a web `Worker`
 
 Web [`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker) allows you
 to do computations in browser on a separate thread. It exposes `.postMessage()` method
@@ -405,10 +389,10 @@ all your event listeners using the `.on()` method to every new socket. So, for e
 if you have 100 different event listeners and 100 sockets concurrently connected to
 the sever, you would need to create 10,000 functions, instead of just having a
 set of 100 function which are the same for every connection anyways. And, of course,
-`socket.io` allows you to send a callback on your `.emit()` call, but it allows
+`socket.io` allows you to send a callback on your `.emit('event', 'data', cb)` call, but it allows
 you to send only a single callback and only at the end of the argument list. `rpc.Router`
 does not have such limitations, you can have as many callbacks as you wish in any
-position of `.emit()` argument list and even arbitrarily deep nested callbacks in
+position of `.emit()` argument list and even arbitrarily deeply nested callbacks in
 in your responses.
 
 You can *fix* these limitations of `socket.io` by using it together with `nmsg-rpc`.
@@ -418,7 +402,7 @@ with every new router object.
 
 ```js
 var io = require('socket.io')();
-var rpc = require('../../src/rpc');
+var rpc = require('nmsg-rpc');
 
 // Create API only once, instead of attaching gazillion `.on` events to EACH new socket.
 var api = new rpc.Api;
@@ -429,10 +413,10 @@ api.add({
 });
 
 io.on('connection', function(socket){
-    // Create router we will use instead of `socket.io`'s built-in one.
+    // Create a router which we will use instead of `socket.io`'s built-in one.
     var router = new rpc.Router;
 
-    // Tell the router to use API we created only ONCE for all sockets.
+    // Tell the router to use API we created once for all routers.
     router.setApi(api);
 
     // Proxy messages using `proxy` event to our new router.

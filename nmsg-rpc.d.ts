@@ -59,6 +59,7 @@ declare module 'nmsg-rpc/rpc' {
 	        [id: number]: any;
 	    };
 	    send: (data) => void;
+	    onerror: (err) => void;
 	    api: Api;
 	    protected subs: {
 	        [event: string]: TeventCallbackList;
@@ -69,7 +70,6 @@ declare module 'nmsg-rpc/rpc' {
 	    protected sendData(data: any): void;
 	    protected dispatch(frame: FrameOutgoing): void;
 	    protected processResponse(frame: FrameIncoming): void;
-	    constructor(socket?: ISocket);
 	    setApi(api: Api): this;
 	    onmessage(msg: any): void;
 	    on(event: string, callback: TeventCallback): this;
@@ -94,3 +94,7 @@ declare module 'nmsg-rpc/rpc' {
 	}
 
 }
+declare var require: any;
+declare var define: any;
+declare var module: any;
+declare var root: any;

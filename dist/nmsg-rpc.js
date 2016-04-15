@@ -243,8 +243,7 @@
 	}(Frame));
 	exports.FrameIncoming = FrameIncoming;
 	var Router = (function () {
-	    function Router(socket) {
-	        var _this = this;
+	    function Router() {
 	        this.latency = 500; // Client to server latency in milliseconds, expected.
 	        // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
 	        this.frame = {};
@@ -257,10 +256,6 @@
 	        // TODO:
 	        // TODO: This actually cannot be a list, only one callback per event!
 	        this.subs = {};
-	        if (socket) {
-	            this.send = socket.send.bind(socket);
-	            socket.onmessage = function (msg) { _this.onmessage(msg); };
-	        }
 	    }
 	    Router.prototype.genCallack = function (frame, pos) {
 	        var _this = this;
@@ -377,7 +372,7 @@
 	    __extends(RouterBuffered, _super);
 	    function RouterBuffered() {
 	        _super.apply(this, arguments);
-	        this.cycle = 5; // Milliseconds for how long to buffer requests.
+	        this.cycle = 10; // Milliseconds for how long to buffer requests.
 	        this.timer = 0;
 	        this.buffer = [];
 	    }

@@ -282,13 +282,6 @@ export class Router {
         }
     }
 
-    constructor(socket?: ISocket) {
-        if(socket) {
-            this.send = socket.send.bind(socket);
-            socket.onmessage = (msg) => { this.onmessage(msg); };
-        }
-    }
-
     setApi(api: Api): this {
         this.api = api;
         return this;
@@ -325,7 +318,7 @@ export class Router {
 // Same as `Router`, but buffers all frames for 5 milliseconds and then sends a list of all frames at once.
 export class RouterBuffered extends Router {
 
-    cycle = 5; // Milliseconds for how long to buffer requests.
+    cycle = 10; // Milliseconds for how long to buffer requests.
 
     protected timer: any = 0;
 
