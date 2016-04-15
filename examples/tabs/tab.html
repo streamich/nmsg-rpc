@@ -1,0 +1,18 @@
+<html>
+<head>
+<script src="../../dist/nmsg-rpc.js"></script>
+<script src="./router.js"></script>
+<script>
+
+router.on('Hello, tab, how are you?', function(callback, event) {
+    console.log('Event:', event);
+    callback('Not bad! How are you?');
+});
+
+router.emit('Hello, tab, how are you?', function(response, event) {
+    console.log(response, event);
+});
+
+</script>
+</head>
+</html>

@@ -172,6 +172,7 @@ var Router = (function () {
         // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
         this.frame = {};
         this.timer = {};
+        this.onerror = function () { };
         this.api = null;
         // List of subscriber functions .on()
         // TODO:
@@ -186,12 +187,18 @@ var Router = (function () {
     }
     Router.prototype.genCallack = function (frame, pos) {
         var _this = this;
+        var called = false;
         return function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i - 0] = arguments[_i];
             }
-            _this.dispatch(FrameOutgoing.createResponse(frame, pos, args));
+            if (!called) {
+                called = true;
+                _this.dispatch(FrameOutgoing.createResponse(frame, pos, args));
+            }
+            else
+                throw Error("Already called: .on(\"" + frame.event + "\") " + pos + "th arg");
         };
     };
     Router.prototype.getSubList = function (event) {
@@ -259,7 +266,13 @@ var Router = (function () {
     // This function is called by user.
     Router.prototype.onmessage = function (msg) {
         var frame = new FrameIncoming;
-        frame.unserialize(msg, this.genCallack.bind(this));
+        try {
+            frame.unserialize(msg, this.genCallack.bind(this));
+        }
+        catch (e) {
+            this.onerror(e);
+            return;
+        }
         if (frame.isResponse())
             this.processResponse(frame);
         else

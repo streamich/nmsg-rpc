@@ -199,6 +199,8 @@ export class Router {
     // This function is overwritten by the user.
     send: (data) => void;
 
+    onerror: (err) => void = () => {};
+
     api: Api = null;
 
     // List of subscriber functions .on()
@@ -214,8 +216,13 @@ export class Router {
 
 
     protected genCallack(frame: FrameIncoming, pos: number) {
+        var called = false;
         return (...args: any[]): void => {
-            this.dispatch(FrameOutgoing.createResponse(frame, pos, args));
+            if(!called) {
+                called = true;
+                this.dispatch(FrameOutgoing.createResponse(frame, pos, args));
+            }
+            else throw Error(`Already called: .on("${frame.event}") ${pos}th arg`);
         };
     }
 
@@ -290,7 +297,12 @@ export class Router {
     // This function is called by user.
     onmessage(msg) {
         var frame = new FrameIncoming;
-        frame.unserialize(msg, this.genCallack.bind(this));
+        try {
+            frame.unserialize(msg, this.genCallack.bind(this));
+        } catch(e) {
+            this.onerror(e);
+            return;
+        }
 
         if(frame.isResponse()) this.processResponse(frame);
         else this.pub(frame);
