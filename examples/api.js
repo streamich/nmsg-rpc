@@ -15,9 +15,7 @@ var api = new rpc.Api()
         console.log('trololo');
     }
 });
-var srouter = new rpc.Router(create_mock_sockets_1.server);
-var crouter = new rpc.Router(create_mock_sockets_1.client);
-srouter.setApi(api);
-crouter.emit('test');
-crouter.emit('more');
-crouter.emit('trololo');
+create_mock_sockets_1.srouter.setApi(api);
+create_mock_sockets_1.crouter.emit('test');
+create_mock_sockets_1.crouter.emit('more');
+create_mock_sockets_1.crouter.emit('trololo');

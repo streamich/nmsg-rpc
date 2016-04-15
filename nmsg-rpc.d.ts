@@ -23,9 +23,6 @@ declare module 'nmsg-rpc/rpc' {
 	    f: number;
 	}
 	export type FrameList = (IFrameDataInitiation | IFrameDataResponse)[];
-	export interface IFrameDataBuffered {
-	    b: FrameList;
-	}
 	export abstract class Frame {
 	    static id: number;
 	    static getNextId(): number;
@@ -62,10 +59,9 @@ declare module 'nmsg-rpc/rpc' {
 	    onerror: (err) => void;
 	    api: Api;
 	    protected subs: {
-	        [event: string]: TeventCallbackList;
+	        [event: string]: TeventCallback;
 	    };
 	    protected genCallack(frame: FrameIncoming, pos: number): (...args: any[]) => void;
-	    protected getSubList(event: string): TeventCallbackList;
 	    protected pub(frame: Frame): void;
 	    protected sendData(data: any): void;
 	    protected dispatch(frame: FrameOutgoing): void;

@@ -12,12 +12,14 @@ as a generic RPC router for any bi-directional messenger to create event-based r
 
 *Features:*
  - Send multiple callbacks using `.emit('event', cb1, 'data', cb2, cb3)`
- - Callbacks can be nested arbitrarily deep, i.e, your response can have callbacks
- inside them as well, and responses to reponse too, etc...
+ - Callbacks can be [nested arbitrarily deep](./examples/callbacks_nested.ts),
+i.e, your response can have callbacks inside them as well, and responses to reponse too, etc...
  - On the server, provides `rpc.Api` class where you define your API only
- once instead of adding event using `.on()` to every new connection.
+ once instead of adding events using `.on()` to every new connection.
  - Has no dependencies at ~350 lines of code.
- - See examples below for usave with `SockJS` and `socket.io`
+ - See examples below for usage with `SockJS` and `socket.io`
+ - Use [nmsg-rpc.js](./dist/nmsg-rpc.js) and [nmsg-rpc.min.js](./dist/nmsg-rpc.min.js) distributions that
+ export this library as AMD or Node.js-compatible module and add a global variable `nmsg.rpc`.
 
 Can be used with any socket that implements bi-directional communication like:
 
@@ -47,13 +49,23 @@ you can use your newly created `router` like so:
 ```js
 // On server
 router.on('ping', function(callback) {
-    callbaack('pong');
+    callback('pong');
 });
 
 // On client
 router.emit('ping', function(result) {
     console.log(result); // pong
 });
+```
+
+You can use wildcard `"*"` event to capture all imcoming messages:
+
+```ts
+router.on('*', function(event, ...args: any[]) {
+    // All incoming messages here.
+    // If any callbacks in `args` list, make sure you call it only once
+    // as this message will be passed to corresponding event callback as well.
+}); 
 ```
 
 ## Reference
@@ -105,6 +117,8 @@ var router = new rpc.Router;
 router.setApi(api);
 ```
 
+Methods defined in `rpc.Api` will *"overwrite"* equally named events attached using `.on()`.
+
 *TypeScript* type definitions available in [./nmsg-rpc.d.ts](./nmsg-rpc.d.ts).
 
 ## Examples
@@ -114,25 +128,25 @@ on its own that we have carved it out into a standalone package. At only 344 lin
 and no external dependencies, `nmsg-rpc` is lightweight enough for you to use in almost any project.
 
 Below we will take a look how `nmsg-rpc` can be used to improve communication
-for the following cases:
+in the following cases:
 
  - Talking with a web `Worker`
- - Talking with `<iframe/>` or other windows using `.postMessage()`
+ - Talking with `<iframe>` or other windows using `.postMessage()`
  - Using `window.localStorage` as a communication channel between browser tabs
  - Interface for `cluster`'s master thread and forked workers in Node.js
- - Add event-base routing to `SockJS`
- - Improve routing for `socket.io`
- 
- See [./examples](./examples) folder for all the examples.
- 
+ - Adding event-base routing to `SockJS`
+ - Improving routing for `socket.io`
+
+See [./examples](./examples) folder for all the examples.
  
 ### Talking with a web `Worker`
 
 Web [`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker) allows you
-to do computations in browser on a separate thread. It exposes `.postMessage()` method
-and `.onmessage` function property you can use to communicate with your `Worker`.
+to do computations in a browser on a separate thread. It exposes `.postMessage()` method
+and `.onmessage` function property which you can use to communicate with your `Worker`.
 
-Here we use those to create `rpc.Router` for bi-directional event-based communication with callbacks.
+Here we use those to create `rpc.Router` for bi-directional event-based communication with callbacks between
+the main thread and the worker.
 
 Let's start with the [`woker.js`](./examples/webworker/worker.js) script that implements our `Worker`. For your browser projects,
 you can use builds of `nmsg-rpc` packaged in [nmsg-rpc.js](./dist/nmsg-rpc.js) and [nmsg-rpc.min.js](./dist/nmsg-rpc.min.js)
@@ -178,7 +192,7 @@ See the [sample files](./examples/webworker).
 For security reasons `<iframe/>`s are sandboxed and the only communication
 mechanism with them is through `.postMessage()` method, obviously that
 way your messages are sent out of order and you have to keep track of them somehow to, for example,
-create a request/response functionality, we use `rpc.Router` to solve this for use.
+create a request/response functionality, we use `rpc.Router` to solve this.
 
 One thing to remember is that `.postMessage()` method in some browsers can only send `string`
 messages, so we use `JSON.stringify` and `JSON.parse` to serialize our objects.
@@ -223,22 +237,24 @@ iframe.onload = function() { // Wait until <iframe> loads.
 };
 ```
 
+See the [this example](./examples/iframe).
+
 Note that this is just an example for illustration purposes, as there are plenty of 
-other things to consider with `<iframe>`s. For example, all windows can send messages
-to all other, so the example will work if you have only those two windows. Also, when dealing
+other things to consider when communicating with `<iframe>`s. For example, all windows can send messages
+to all other windows, so the example will work if you have only two windows. Also, when dealing
 `window.postMessage()` you must check the origin of the messages for security purposes, as any
-window can send messages to your script. See the [this example](./examples/iframe).
+window can send messages to your script.
 
 ### Intercom for browser tabs using `window.localStorage`
 
 Here we will create a messaging system between browser tabs, all just in few lines of code.
 
 You can store data which is accessible by all browser tabs in `window.localStorage`,
-once a key in `window.localStorage` is modified the `window` fires a `storage` event in 
+once a key in `window.localStorage` is modified, `window` fires a `storage` event in 
 *all other* tabs with the modified key event.
 
 We use this functionality to send our messages by mutating some key on `localStorage` and
-we will listen to the `storage` event to capture incoming messages.
+we listen to the `storage` event to capture incoming messages.
 
 This is how we create our router in [router.js](./examples/tabs/router.js):
 
@@ -292,10 +308,10 @@ And now in the first this will appear:
     
 See the full example [here](./examples/tabs).
 
-### Interface for Node.js `cluster`'s master thread and forked workers 
+### Interface for Node.js `cluster`'s main thread and forked workers 
 
-We can use `rpc.Router` to create a communication interface for Node.js
-master process and its forked workers.
+We can use `rpc.Router` to create a communication interface for Node's
+main process and its forked workers.
 
 This is how we create an `rpc.Router` on the master thread:
 
@@ -324,11 +340,11 @@ router.on('still alive?', function(callback) {
 
 See full example in [./examples/cluster](./examples/cluster).
 
-### Adding event-base api to `SockJS`
+### Adding event-base routing to `SockJS`
 
 Out-of-the-box `SockJS` does not provide any sophisticated message routing 
-interface, but just `.onmessage` and `.send` methods. But those methods
-are just enough to create `rpc.Router` wrapper around `SockJS`.
+interface, but just `.onmessage` and `.send` methods. Conveniently those methods
+are just enough to create an `rpc.Router` wrapper around `SockJS`.
 
 This is how we do it on the server:
 
@@ -383,7 +399,7 @@ routing system in one of the most sophisticated and handicapped at the same.
 It has advanced routing mechanisms like [Rooms and Namespaces](http://socket.io/docs/rooms-and-namespaces/#), which
 not many understand how to use and almost none actually uses.
 
-At the same time, it does not offer such simple functionality as a wildcard
+And at the same time, it does not offer such simple functionality as a wildcard
 `"*"` event, for example, to catch all events. Also, it forces you to add
 all your event listeners using the `.on()` method to every new socket. So, for example,
 if you have 100 different event listeners and 100 sockets concurrently connected to

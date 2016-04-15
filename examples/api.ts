@@ -1,5 +1,5 @@
 import * as rpc from '../src/rpc';
-import {server, client} from './create_mock_sockets';
+import {srouter, crouter} from './create_mock_sockets';
 
 
 var api = new rpc.Api()
@@ -17,8 +17,6 @@ var api = new rpc.Api()
         },
     });
 
-var srouter = new rpc.Router(server);
-var crouter = new rpc.Router(client);
 srouter.setApi(api);
 crouter.emit('test');
 crouter.emit('more');

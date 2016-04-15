@@ -82,6 +82,10 @@
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var util_1 = __webpack_require__(2);
+	// export interface IFrameDataBuffered {
+	// b: FrameList; // B for bulk.
+	// [i: number]: FrameList;
+	// }
 	var Frame = (function () {
 	    function Frame() {
 	        this.data = null;
@@ -273,11 +277,10 @@
 	                throw Error("Already called: .on(\"" + frame.event + "\") " + pos + "th arg");
 	        };
 	    };
-	    Router.prototype.getSubList = function (event) {
-	        if (!this.subs[event])
-	            this.subs[event] = [];
-	        return this.subs[event];
-	    };
+	    // protected getSubList(event: string): TeventCallbackList {
+	    //     if(!this.subs[event]) this.subs[event] = [];
+	    //     return this.subs[event];
+	    // }
 	    Router.prototype.pub = function (frame) {
 	        var event = frame.event;
 	        if (!event)
@@ -290,16 +293,16 @@
 	            method.apply(this, args); // Set this to this Router, in case it has not been bound, so method could use `this.emit(...);`
 	        }
 	        else {
-	            var list = this.getSubList(event);
-	            for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
-	                var sub = list_1[_i];
-	                sub.apply(null, args);
-	            }
-	            list = this.getSubList('*');
-	            for (var _a = 0, list_2 = list; _a < list_2.length; _a++) {
-	                var sub = list_2[_a];
-	                sub.apply(null, [event].concat(args));
-	            }
+	            // var list = this.getSubList(event);
+	            // for(var sub of list) sub.apply(null, args);
+	            var func = this.subs[event];
+	            if (func)
+	                func.apply(null, args);
+	            // list = this.getSubList('*');
+	            // for(var sub of list) sub.apply(null, [event, ...args]);
+	            func = this.subs['*'];
+	            if (func)
+	                func.apply(null, [event].concat(args));
 	        }
 	    };
 	    Router.prototype.sendData = function (data) {
@@ -323,6 +326,7 @@
 	        request.processResponse(frame);
 	        // Remove the original request frame, if all callbacks processed.
 	        if (!request.hasCallbacks()) {
+	            // console.log(this.frame, this.timer);
 	            var id = request.id;
 	            delete this.frame[id];
 	            var timer = this.timer[id];
@@ -351,8 +355,9 @@
 	            this.pub(frame);
 	    };
 	    Router.prototype.on = function (event, callback) {
-	        var list = this.getSubList(event);
-	        list.push(callback);
+	        // var list: TeventCallbackList = this.getSubList(event);
+	        // list.push(callback);
+	        this.subs[event] = callback;
 	        return this;
 	    };
 	    Router.prototype.emit = function (event) {
@@ -377,8 +382,8 @@
 	        this.buffer = [];
 	    }
 	    RouterBuffered.prototype.flush = function () {
-	        var data = { b: this.buffer };
-	        this.send(data);
+	        // var data: IFrameDataBuffered = {b: this.buffer};
+	        this.send(this.buffer);
 	        this.buffer = [];
 	    };
 	    RouterBuffered.prototype.sendData = function (data) {
@@ -398,11 +403,11 @@
 	        // console.log('msg', msg);
 	        if (typeof msg != 'object')
 	            return;
-	        if (msg.b) {
-	            if (!(msg.b instanceof Array))
-	                return;
-	            for (var _i = 0, _a = msg.b; _i < _a.length; _i++) {
-	                var fmsg = _a[_i];
+	        if (msg instanceof Array) {
+	            // if(!(msg.b instanceof Array)) return;
+	            // for(var fmsg of msg.b) super.onmessage(fmsg);
+	            for (var _i = 0, msg_1 = msg; _i < msg_1.length; _i++) {
+	                var fmsg = msg_1[_i];
 	                _super.prototype.onmessage.call(this, fmsg);
 	            }
 	        }

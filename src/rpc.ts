@@ -28,9 +28,10 @@ export interface IFrameDataResponse extends IFrameData {
 
 export type FrameList = (IFrameDataInitiation | IFrameDataResponse)[];
 
-export interface IFrameDataBuffered {
-    b: FrameList; // B for bulk.
-}
+// export interface IFrameDataBuffered {
+    // b: FrameList; // B for bulk.
+    // [i: number]: FrameList;
+// }
 
 
 export abstract class Frame {
@@ -212,7 +213,7 @@ export class Router {
     // TODO: This actually cannot be a list, only one callback per event!
 
 
-    protected subs: {[event: string]: TeventCallbackList} = {};
+    protected subs: {[event: string]: TeventCallback} = {};
 
 
     protected genCallack(frame: FrameIncoming, pos: number) {
@@ -221,15 +222,14 @@ export class Router {
             if(!called) {
                 called = true;
                 this.dispatch(FrameOutgoing.createResponse(frame, pos, args));
-            }
-            else throw Error(`Already called: .on("${frame.event}") ${pos}th arg`);
+            } else throw Error(`Already called: .on("${frame.event}") ${pos}th arg`);
         };
     }
 
-    protected getSubList(event: string): TeventCallbackList {
-        if(!this.subs[event]) this.subs[event] = [];
-        return this.subs[event];
-    }
+    // protected getSubList(event: string): TeventCallbackList {
+    //     if(!this.subs[event]) this.subs[event] = [];
+    //     return this.subs[event];
+    // }
 
     protected pub(frame: Frame) {
         var event = frame.event;
@@ -242,11 +242,15 @@ export class Router {
         if(method) { // API methods have precedence.
             method.apply(this, args); // Set this to this Router, in case it has not been bound, so method could use `this.emit(...);`
         } else { // Else call .on() callbacks.
-            var list = this.getSubList(event);
-            for(var sub of list) sub.apply(null, args);
+            // var list = this.getSubList(event);
+            // for(var sub of list) sub.apply(null, args);
+            var func = this.subs[event];
+            if(func) func.apply(null, args);
 
-            list = this.getSubList('*');
-            for(var sub of list) sub.apply(null, [event, ...args]);
+            // list = this.getSubList('*');
+            // for(var sub of list) sub.apply(null, [event, ...args]);
+            func = this.subs['*'];
+            if(func) func.apply(null, [event, ...args]);
         }
     }
 
@@ -274,11 +278,13 @@ export class Router {
 
         // Remove the original request frame, if all callbacks processed.
         if(!request.hasCallbacks()) {
+            // console.log(this.frame, this.timer);
             var id = request.id;
             delete this.frame[id];
             var timer = this.timer[id];
             if(timer) clearTimeout(timer);
             delete this.timer[id];
+            // console.log(this.frame, this.timer);
         }
     }
 
@@ -302,8 +308,9 @@ export class Router {
     }
 
     on(event: string, callback: TeventCallback): this {
-        var list: TeventCallbackList = this.getSubList(event);
-        list.push(callback);
+        // var list: TeventCallbackList = this.getSubList(event);
+        // list.push(callback);
+        this.subs[event] = callback;
         return this;
     }
 
@@ -325,8 +332,8 @@ export class RouterBuffered extends Router {
     protected buffer: FrameList = [];
 
     protected flush() {
-        var data: IFrameDataBuffered = {b: this.buffer};
-        this.send(data);
+        // var data: IFrameDataBuffered = {b: this.buffer};
+        this.send(this.buffer);
         this.buffer = [];
     }
 
@@ -347,9 +354,10 @@ export class RouterBuffered extends Router {
     onmessage(msg) {
         // console.log('msg', msg);
         if(typeof msg != 'object') return;
-        if(msg.b) { // Buffered bulk request.
-            if(!(msg.b instanceof Array)) return;
-            for(var fmsg of msg.b) super.onmessage(fmsg);
+        if(msg instanceof Array) { // Buffered bulk request.
+            // if(!(msg.b instanceof Array)) return;
+            // for(var fmsg of msg.b) super.onmessage(fmsg);
+            for(var fmsg of msg) super.onmessage(fmsg);
         } else super.onmessage(msg);
     }
 }

@@ -2,8 +2,16 @@ import * as rpc from '../src/rpc';
 import {server, client} from './create_mock_sockets';
 
 
-new rpc.RouterBuffered(server).on('ping', () => {
+var bs = new rpc.RouterBuffered;
+server.onmessage = (obj) => { bs.onmessage(obj); };
+bs.send = (obj) => { server.send(obj); };
+
+var bc = new rpc.RouterBuffered;
+client.onmessage = (obj) => { bc.onmessage(obj); };
+bc.send = (obj) => { client.send(obj); };
+
+bs.on('ping', () => {
     console.log('ping');
 });
 
-new rpc.RouterBuffered(client).emit('ping');
+bc.emit('ping');
