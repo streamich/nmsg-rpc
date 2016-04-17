@@ -1,5 +1,5 @@
 var io = require('socket.io')();
-var rpc = require('../../src/rpc');
+var rpc = require('../../rpc');
 
 // Create API only once, instead of attaching gazillion `.on` events to EACH new socket.
 var api = new rpc.Api;

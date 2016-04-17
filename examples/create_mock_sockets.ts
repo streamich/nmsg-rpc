@@ -1,4 +1,4 @@
-import * as rpc from '../src/rpc';
+import * as rpc from '../rpc';
 
 class Socket implements rpc.ISocket {
     connectedToSocket: Socket = null;

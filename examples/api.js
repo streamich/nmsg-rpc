@@ -1,5 +1,5 @@
 "use strict";
-var rpc = require('../src/rpc');
+var rpc = require('../rpc');
 var create_mock_sockets_1 = require('./create_mock_sockets');
 var api = new rpc.Api()
     .add({

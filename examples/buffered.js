@@ -1,5 +1,5 @@
 "use strict";
-var rpc = require('../src/rpc');
+var rpc = require('../rpc');
 var create_mock_sockets_1 = require('./create_mock_sockets');
 var bs = new rpc.RouterBuffered;
 create_mock_sockets_1.server.onmessage = function (obj) { bs.onmessage(obj); };

@@ -1,6 +1,6 @@
 var http = require('http');
 var sockjs = require('sockjs');
-var rpc = require('../../src/rpc');
+var rpc = require('../../rpc');
 
 var ws = sockjs.createServer();
 ws.on('connection', function(conn) {

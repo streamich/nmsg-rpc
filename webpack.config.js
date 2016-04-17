@@ -2,7 +2,7 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: {
-        app: './src/umd'
+        app: './umd'
     },
     output: {
         path: './dist',

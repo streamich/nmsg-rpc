@@ -1,5 +1,5 @@
 var cluster = require('cluster');
-var rpc = require('../../src/rpc');
+var rpc = require('../../rpc');
 var worker = require('./worker');
 
 if (cluster.isMaster) {

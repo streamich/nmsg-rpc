@@ -201,6 +201,7 @@ export class Router {
     send: (data) => void;
 
     onerror: (err) => void = () => {};
+    onevent: (event: string, args: any[]) => void;
 
     api: Api = null;
 
@@ -232,9 +233,10 @@ export class Router {
     // }
 
     protected pub(frame: Frame) {
-        var event = frame.event;
+        var {event, args} = frame;
         if(!event) return;
-        var args = frame.args;
+
+        if(this.onevent) this.onevent(event, args);
 
         var method;
         if(this.api) method = this.api.get(event);

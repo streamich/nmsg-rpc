@@ -1,4 +1,4 @@
-var rpc = require('../../src/rpc');
+var rpc = require('../../rpc');
 
 module.exports = function worker() {
     var router = new rpc.Router;

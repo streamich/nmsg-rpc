@@ -19,7 +19,7 @@ i.e, your response can have callbacks inside them as well, and responses to repo
  - Has no dependencies at ~350 lines of code.
  - See examples below for usage with `SockJS` and `socket.io`
  - Use [nmsg-rpc.js](./dist/nmsg-rpc.js) and [nmsg-rpc.min.js](./dist/nmsg-rpc.min.js) distributions that
- export this library as AMD or Node.js-compatible module and add a global variable `nmsg.rpc`.
+ export this library as AMD or Node.js-compatible module and adds a global variable `nmsg.rpc` in your browser.
 
 Can be used with any socket that implements bi-directional communication like:
 
@@ -30,12 +30,14 @@ interface ISocket {
 }
 ```
 
+(P.S. [`Websocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) is implemented like that.)
+
 Usage:
 
 ```ts
 import * as rpc from 'nmsg-rpc'; // var rpc = require('nmsg-rpc');
 
-var socket: ISocket; // Socket that can send message and receive messages.
+var socket: ISocket; // Socket that can send messages and receive messages.
 var router = new rpc.Router;
 
 // Proxy the messages to your `router`.
@@ -87,6 +89,7 @@ class Router {
  - `.onmessage(msg)` -- you have to call this function when new messages arrive.
  - `.on()` and `.emit()` -- use these two methods to do all your communication between the processes.
  - `.onerror(err)` -- you can implement this function to listen for parsing errors.
+ - `.onevent(event: string, args: any[])` -- implement this function to wiretap on all incoming events.
 
 ### `rpc.RouterBuffered`
 
@@ -127,8 +130,7 @@ Originally `nmsg-rpc` was part of the [`nmsg`](http://npmjs.com/package/nmsg) pr
 on its own that we have carved it out into a standalone package. At only 344 lines of code (as of this writing)
 and no external dependencies, `nmsg-rpc` is lightweight enough for you to use in almost any project.
 
-Below we will take a look how `nmsg-rpc` can be used to improve communication
-in the following cases:
+Below we will take at the following use cases:
 
  - Talking with a web `Worker`
  - Talking with `<iframe>` or other windows using `.postMessage()`
@@ -265,7 +267,7 @@ var router = new nmsg.rpc.Router;
 // Send router frames using `window.localStorage` facility.
 router.send = function(obj) {
     // The `storage` event on `Window` is fired only when contents of a key changes,
-    // so we make sure our key is `''` empty first.
+    // so we make sure our key is removed at first.
     window.localStorage.removeItem('intercom');
     window.localStorage.setItem('intercom', JSON.stringify(obj));
 };
@@ -302,7 +304,7 @@ at first. Then you open that same file in one more tab and you should see in con
 
     Not bad! How are you? [Storage event object]
     
-And now in the first this will appear:
+And now in the first tab this will appear:
 
     Event: [Storage event object]
     
@@ -478,7 +480,7 @@ Generate `nmsg-rpc.d.ts` typing file:
     
 Publishing:
     
-    npm publish
+    npm run mypublish
     
 Create a distribution files in [./dist](./dist) folder:
 

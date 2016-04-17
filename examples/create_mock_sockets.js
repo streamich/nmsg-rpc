@@ -1,5 +1,5 @@
 "use strict";
-var rpc = require('../src/rpc');
+var rpc = require('../rpc');
 var Socket = (function () {
     function Socket() {
         this.connectedToSocket = null;

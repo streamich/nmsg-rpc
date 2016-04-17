@@ -1,5 +1,4 @@
-import * as rpc from '../src/rpc';
-import {client, server, srouter, crouter} from './create_mock_sockets';
+import {srouter, crouter} from './create_mock_sockets';
 
 
 srouter

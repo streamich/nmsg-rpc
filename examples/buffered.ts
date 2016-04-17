@@ -1,4 +1,4 @@
-import * as rpc from '../src/rpc';
+import * as rpc from '../rpc';
 import {server, client} from './create_mock_sockets';
 
 

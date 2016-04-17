@@ -23,17 +23,10 @@
   },
   "scripts": {
     "mypublish": "npm run dist && npm run typing && git add -A && git commit -m \"Publishing\" && npm version patch && git push -u origin master && npm publish",
-    "start": "npm i -g tsd mocha webpack uglify-js && tsd install node && tsd install mocha && tsd install chai",
-    "typing": "node ./scripts/dts.js",
+    "typing": "node ./dts.js",
     "test": "mocha",
     "dist-build": "webpack",
     "dist-min": "uglifyjs dist/nmsg-rpc.js -o dist/nmsg-rpc.min.js --compress --mangle --source-map dist/nmsg-rpc.min.js.map",
     "dist": "npm run dist-build && npm run dist-min"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "dts-generator": "1.7.0",
-    "chai": "*",
-    "webpack": "*"
   }
 }
