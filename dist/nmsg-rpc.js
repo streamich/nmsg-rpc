@@ -282,10 +282,11 @@
 	    //     return this.subs[event];
 	    // }
 	    Router.prototype.pub = function (frame) {
-	        var event = frame.event;
+	        var event = frame.event, args = frame.args;
 	        if (!event)
 	            return;
-	        var args = frame.args;
+	        if (this.onevent)
+	            this.onevent(event, args);
 	        var method;
 	        if (this.api)
 	            method = this.api.get(event);

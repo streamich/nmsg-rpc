@@ -57,6 +57,7 @@ declare module 'nmsg-rpc/rpc' {
 	    };
 	    send: (data) => void;
 	    onerror: (err) => void;
+	    onevent: (event: string, args: any[]) => void;
 	    api: Api;
 	    protected subs: {
 	        [event: string]: TeventCallback;
