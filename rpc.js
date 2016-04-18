@@ -66,9 +66,10 @@ var FrameOutgoing = (function (_super) {
     };
     FrameOutgoing.prototype.serialize = function () {
         var data = {
-            i: this.id,
-            e: this.event
+            i: this.id
         };
+        if (this.event)
+            data.e = this.event;
         if (this.args.length) {
             data.a = [];
             var cbs = [];
@@ -114,20 +115,20 @@ var FrameIncoming = (function (_super) {
         this.timeout = typeof data.t === 'number' ? data.t : Frame.timeout;
         var args = data.a && (data.a instanceof Array) ? data.a : [];
         this.args = [];
-        // this.callbacks = [];
+        // Interpolate argument and callback arrays
         var cbs = data.c && (data.c instanceof Array) ? data.c : [];
         var ic = 0;
-        for (var ia = 0; ia <= args.length; ia++) {
-            if (ia === cbs[ic]) {
+        var ia = 0;
+        for (var i = 0; i < args.length + cbs.length; i++) {
+            if (i === cbs[ic]) {
                 var pos = cbs[ic++];
                 if (typeof pos !== 'number')
                     throw Error('Invalid callback list');
                 this.args.push(onCallback(this, pos));
             }
-            if (ia < args.length)
-                this.args.push(args[ia]);
+            else
+                this.args.push(args[ia++]);
         }
-        console.log(this.args);
         // this.event = '';
         // this.rid = 0;
         // this.func = 0;
