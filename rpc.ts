@@ -29,8 +29,8 @@ export interface IFrameDataResponse extends IFrameData {
 export type FrameList = (IFrameDataInitiation | IFrameDataResponse)[];
 
 // export interface IFrameDataBuffered {
-    // b: FrameList; // B for bulk.
-    // [i: number]: FrameList;
+// b: FrameList; // B for bulk.
+// [i: number]: FrameList;
 // }
 
 
@@ -137,38 +137,31 @@ export class FrameOutgoing extends Frame {
 export class FrameIncoming extends Frame {
 
     unserialize(data, onCallback) {
-        this.data = data;
 
         // IFrameData
         if(typeof data.i === 'number') this.id = data.i;
         else throw Error('Error parsing id');
 
-        if(data.t) {
-            if(typeof data.t == 'number') this.timeout = data.t;
-            else throw Error('Error parsing timeout');
-        } else this.timeout = Frame.timeout;
-
+        this.timeout = typeof data.t === 'number' ? data.t : Frame.timeout;
+        var args = data.a && (data.a instanceof Array) ? data.a : [];
         this.args = [];
-        if(data.a) {
-            if(data.a instanceof Array) {
-                for(var arg of data.a) this.args.push(arg);
-            }
-            else throw Error('Error parsing arguments');
-        } else data.a = [];
 
-        this.callbacks = [];
-        if(data.c) {
-            if(!(data.c instanceof Array)) throw Error('Error parsing callbacks');
-            for(var pos of data.c) {
-                var callback = onCallback(this, pos);
-                this.callbacks.push(callback);
-                this.args.splice(pos, 0, callback);
+        // this.callbacks = [];
+        var cbs = data.c && (data.c instanceof Array) ? data.c : [];
+        var ic = 0;
+        for(var ia = 0; ia <= args.length; ia++) {
+            if(ia === cbs[ic]) {
+                var pos = cbs[ic++];
+                if(typeof pos !== 'number') throw Error('Invalid callback list');
+                this.args.push(onCallback(this, pos));
             }
+            if(ia < args.length) this.args.push(args[ia]);
         }
+        console.log(this.args);
 
-        this.event = '';
-        this.rid = 0;
-        this.func = 0;
+        // this.event = '';
+        // this.rid = 0;
+        // this.func = 0;
 
         if(data.e) {
 
@@ -176,14 +169,15 @@ export class FrameIncoming extends Frame {
             if(typeof data.e === 'string') this.event = data.e;
             else throw Error('Error parsing event');
 
-        } else if(data.r) {
+        } else {
+            // } else if(data.r) {
 
             // IFrameDataResponse
             if(typeof data.r === 'number') this.rid = data.r;
             else throw Error('Error parsing resposne id');
 
             if(typeof data.f === 'number') this.func = data.f;
-            else throw Error('Error parsing reponse position');
+            else throw Error('Error parsing response position');
         }
     }
 }
@@ -284,13 +278,7 @@ export class Router {
         }
     }
 
-    setApi(api: Api): this {
-        this.api = api;
-        return this;
-    }
-
-    // This function is called by user.
-    onmessage(msg) {
+    protected procMsg(msg) {
         var frame = new FrameIncoming;
         try {
             frame.unserialize(msg, this.genCallack.bind(this));
@@ -301,6 +289,22 @@ export class Router {
 
         if(frame.isResponse()) this.processResponse(frame);
         else this.pub(frame);
+    }
+
+    setApi(api: Api): this {
+        this.api = api;
+        return this;
+    }
+
+    // This function is called by user.
+    onmessage(msg) {
+        // console.log('msg', msg);
+        if(typeof msg != 'object') return;
+        if(msg instanceof Array) { // Buffered bulk request.
+            // if(!(msg.b instanceof Array)) return;
+            // for(var fmsg of msg.b) super.onmessage(fmsg);
+            for(var fmsg of msg) this.procMsg(fmsg);
+        } else this.procMsg(msg);
     }
 
     on(event: string, callback: TeventCallback): this {
@@ -345,16 +349,6 @@ export class RouterBuffered extends Router {
                 this.flush();
             }, this.cycle);
         }
-    }
-
-    onmessage(msg) {
-        // console.log('msg', msg);
-        if(typeof msg != 'object') return;
-        if(msg instanceof Array) { // Buffered bulk request.
-            // if(!(msg.b instanceof Array)) return;
-            // for(var fmsg of msg.b) super.onmessage(fmsg);
-            for(var fmsg of msg) super.onmessage(fmsg);
-        } else super.onmessage(msg);
     }
 }
 
