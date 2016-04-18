@@ -201,18 +201,9 @@ export class Router {
     send: (data) => void;
 
     onerror: (err) => void = () => {};
-    onevent: (event: string, args: any[]) => void;
+    onevent: (event: string, args: any[]) => boolean;
 
     api: Api = null;
-
-    // List of subscriber functions .on()
-
-
-    // TODO:
-    // TODO:
-    // TODO:
-    // TODO: This actually cannot be a list, only one callback per event!
-
 
     protected subs: {[event: string]: TeventCallback} = {};
 
@@ -236,7 +227,10 @@ export class Router {
         var {event, args} = frame;
         if(!event) return;
 
-        if(this.onevent) this.onevent(event, args);
+        // `.onevent()` wiretaps on all events, if it returns true no further routing is done.
+        var stop_routing = false;
+        if(this.onevent) stop_routing = !!this.onevent(event, args);
+        if(stop_routing) return;
 
         var method;
         if(this.api) method = this.api.get(event);

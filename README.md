@@ -79,6 +79,7 @@ class Router {
     send: (data) => void;
     onmessage(msg: any): void;
     onerror: (err) => void;
+    onevent: (event: string, args: any[]) => void;
     setApi(api: Api): this;
     on(event: string, callback: TeventCallback): this;
     emit(event: string, ...args: any[]): this;

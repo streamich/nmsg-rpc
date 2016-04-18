@@ -177,11 +177,6 @@ var Router = (function () {
         this.timer = {};
         this.onerror = function () { };
         this.api = null;
-        // List of subscriber functions .on()
-        // TODO:
-        // TODO:
-        // TODO:
-        // TODO: This actually cannot be a list, only one callback per event!
         this.subs = {};
     }
     Router.prototype.genCallack = function (frame, pos) {
@@ -208,8 +203,12 @@ var Router = (function () {
         var event = frame.event, args = frame.args;
         if (!event)
             return;
+        // `.onevent()` wiretaps on all events, if it returns true no further routing is done.
+        var stop_routing = false;
         if (this.onevent)
-            this.onevent(event, args);
+            stop_routing = !!this.onevent(event, args);
+        if (stop_routing)
+            return;
         var method;
         if (this.api)
             method = this.api.get(event);
