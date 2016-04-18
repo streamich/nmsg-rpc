@@ -129,9 +129,6 @@ var FrameIncoming = (function (_super) {
             else
                 this.args.push(args[ia++]);
         }
-        // this.event = '';
-        // this.rid = 0;
-        // this.func = 0;
         if (data.e) {
             // IFrameDataInitiation
             if (typeof data.e === 'string')

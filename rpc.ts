@@ -157,10 +157,6 @@ export class FrameIncoming extends Frame {
             } else this.args.push(args[ia++]);
         }
 
-        // this.event = '';
-        // this.rid = 0;
-        // this.func = 0;
-
         if(data.e) {
 
             // IFrameDataInitiation
