@@ -159,6 +159,8 @@ var Router = (function () {
         // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
         this.frame = {};
         this.timer = {};
+        // This function is overwritten by the user.
+        this.send = noop;
         this.onerror = noop;
         this.onframe = noop;
         this.api = null;

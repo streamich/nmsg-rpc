@@ -188,8 +188,7 @@ export class Router {
     protected timer: {[id: number]: any} = {};
 
     // This function is overwritten by the user.
-    send: (data) => void;
-
+    send: (data) => void = noop as (data) => void;
     onerror: (err) => void = noop as (err) => void;
     onevent: (event: string, args: any[]) => boolean;
     onframe: (frame: FrameIncoming) => void = noop as (frame: FrameIncoming) => void;
