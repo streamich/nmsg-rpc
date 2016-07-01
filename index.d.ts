@@ -54,6 +54,7 @@ export class Router {
     send: (data) => void;
     onerror: (err) => void;
     onevent: (event: string, args: any[]) => void;
+    onframe: (frame: FrameIncoming) => void;
     api: Api;
     protected subs: {
         [event: string]: TeventCallback;
