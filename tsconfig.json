@@ -4,5 +4,8 @@
     "module": "commonjs",
     "removeComments": false,
     "jsx": "react"
-  }
+  },
+  "files": [
+    "rpc.ts"
+  ]
 }

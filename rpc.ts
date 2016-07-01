@@ -1,6 +1,8 @@
 import {extend} from './util';
 
 
+var noop = () => {};
+
 export interface ISocket {
     onmessage: (msg: any) => void;
     send(msg: any);
@@ -42,7 +44,7 @@ export abstract class Frame {
         return Frame.id = (Frame.id % 1000000000) + 1; // Always greater than 0.
     }
 
-    static timeout = 5000; // Default timeout (in milliseconds), so that we don't send timeout value with every request.
+    static timeout = 15000; // Default timeout (in milliseconds), so that we don't send timeout value with every request.
 
     data: IFrameDataInitiation | IFrameDataResponse = null;
 
@@ -188,8 +190,9 @@ export class Router {
     // This function is overwritten by the user.
     send: (data) => void;
 
-    onerror: (err) => void = () => {};
+    onerror: (err) => void = noop as (err) => void;
     onevent: (event: string, args: any[]) => boolean;
+    onframe: (frame: FrameIncoming) => void = noop as (frame: FrameIncoming) => void;
 
     api: Api = null;
 
@@ -247,7 +250,10 @@ export class Router {
             this.frame[frame.id] = frame;
 
             // Remove this frame after some timeout, if callbacks not called.
-            this.timer[frame.id] = setTimeout(() => { delete this.frame[frame.id]; }, frame.timeout + this.latency);
+            this.timer[frame.id] = setTimeout(() => {
+                delete this.frame[frame.id];
+                delete this.timer[frame.id];
+            }, frame.timeout + this.latency);
         }
 
         var data = frame.serialize();
@@ -281,6 +287,7 @@ export class Router {
             return;
         }
 
+        this.onframe(frame);
         if(frame.isResponse()) this.processResponse(frame);
         else this.pub(frame);
     }
@@ -321,7 +328,7 @@ export class RouterBuffered extends Router {
 
     cycle = 10; // Milliseconds for how long to buffer requests.
 
-    protected timer: any = 0;
+    protected cycleTimer: any = 0;
 
     protected buffer: FrameList = [];
 
@@ -337,9 +344,9 @@ export class RouterBuffered extends Router {
     }
 
     protected startTimer() {
-        if(!this.timer) {
-            this.timer = setTimeout(() => {
-                this.timer = 0;
+        if(!this.cycleTimer) {
+            this.cycleTimer = setTimeout(() => {
+                this.cycleTimer = 0;
                 this.flush();
             }, this.cycle);
         }

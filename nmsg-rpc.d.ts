@@ -1,8 +1,8 @@
-declare module 'nmsg-rpc/util' {
+declare module 'util' {
 	export function extend<T>(obj1: T, obj2: T, ...objs: T[]): T;
 
 }
-declare module 'nmsg-rpc/rpc' {
+declare module 'rpc' {
 	export interface ISocket {
 	    onmessage: (msg: any) => void;
 	    send(msg: any): any;
@@ -57,7 +57,7 @@ declare module 'nmsg-rpc/rpc' {
 	    };
 	    send: (data) => void;
 	    onerror: (err) => void;
-	    onevent: (event: string, args: any[]) => void;
+	    onevent: (event: string, args: any[]) => boolean;
 	    api: Api;
 	    protected subs: {
 	        [event: string]: TeventCallback;
@@ -67,6 +67,7 @@ declare module 'nmsg-rpc/rpc' {
 	    protected sendData(data: any): void;
 	    protected dispatch(frame: FrameOutgoing): void;
 	    protected processResponse(frame: FrameIncoming): void;
+	    protected procMsg(msg: any): void;
 	    setApi(api: Api): this;
 	    onmessage(msg: any): void;
 	    on(event: string, callback: TeventCallback): this;
@@ -79,7 +80,6 @@ declare module 'nmsg-rpc/rpc' {
 	    protected flush(): void;
 	    protected sendData(data: any): void;
 	    protected startTimer(): void;
-	    onmessage(msg: any): void;
 	}
 	export type TApiList = {
 	    [method: string]: (...args: any[]) => void;
@@ -91,7 +91,3 @@ declare module 'nmsg-rpc/rpc' {
 	}
 
 }
-declare var require: any;
-declare var define: any;
-declare var module: any;
-declare var root: any;

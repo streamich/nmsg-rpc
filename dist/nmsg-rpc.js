@@ -143,9 +143,10 @@
 	    };
 	    FrameOutgoing.prototype.serialize = function () {
 	        var data = {
-	            i: this.id,
-	            e: this.event
+	            i: this.id
 	        };
+	        if (this.event)
+	            data.e = this.event;
 	        if (this.args.length) {
 	            data.a = [];
 	            var cbs = [];
@@ -183,47 +184,28 @@
 	        _super.apply(this, arguments);
 	    }
 	    FrameIncoming.prototype.unserialize = function (data, onCallback) {
-	        this.data = data;
 	        // IFrameData
 	        if (typeof data.i === 'number')
 	            this.id = data.i;
 	        else
 	            throw Error('Error parsing id');
-	        if (data.t) {
-	            if (typeof data.t == 'number')
-	                this.timeout = data.t;
-	            else
-	                throw Error('Error parsing timeout');
-	        }
-	        else
-	            this.timeout = Frame.timeout;
+	        this.timeout = typeof data.t === 'number' ? data.t : Frame.timeout;
+	        var args = data.a && (data.a instanceof Array) ? data.a : [];
 	        this.args = [];
-	        if (data.a) {
-	            if (data.a instanceof Array) {
-	                for (var _i = 0, _a = data.a; _i < _a.length; _i++) {
-	                    var arg = _a[_i];
-	                    this.args.push(arg);
-	                }
+	        // Interpolate argument and callback arrays
+	        var cbs = data.c && (data.c instanceof Array) ? data.c : [];
+	        var ic = 0;
+	        var ia = 0;
+	        for (var i = 0; i < args.length + cbs.length; i++) {
+	            if (i === cbs[ic]) {
+	                var pos = cbs[ic++];
+	                if (typeof pos !== 'number')
+	                    throw Error('Invalid callback list');
+	                this.args.push(onCallback(this, pos));
 	            }
 	            else
-	                throw Error('Error parsing arguments');
+	                this.args.push(args[ia++]);
 	        }
-	        else
-	            data.a = [];
-	        this.callbacks = [];
-	        if (data.c) {
-	            if (!(data.c instanceof Array))
-	                throw Error('Error parsing callbacks');
-	            for (var _b = 0, _c = data.c; _b < _c.length; _b++) {
-	                var pos = _c[_b];
-	                var callback = onCallback(this, pos);
-	                this.callbacks.push(callback);
-	                this.args.splice(pos, 0, callback);
-	            }
-	        }
-	        this.event = '';
-	        this.rid = 0;
-	        this.func = 0;
 	        if (data.e) {
 	            // IFrameDataInitiation
 	            if (typeof data.e === 'string')
@@ -231,7 +213,8 @@
 	            else
 	                throw Error('Error parsing event');
 	        }
-	        else if (data.r) {
+	        else {
+	            // } else if(data.r) {
 	            // IFrameDataResponse
 	            if (typeof data.r === 'number')
 	                this.rid = data.r;
@@ -240,7 +223,7 @@
 	            if (typeof data.f === 'number')
 	                this.func = data.f;
 	            else
-	                throw Error('Error parsing reponse position');
+	                throw Error('Error parsing response position');
 	        }
 	    };
 	    return FrameIncoming;
@@ -254,11 +237,6 @@
 	        this.timer = {};
 	        this.onerror = function () { };
 	        this.api = null;
-	        // List of subscriber functions .on()
-	        // TODO:
-	        // TODO:
-	        // TODO:
-	        // TODO: This actually cannot be a list, only one callback per event!
 	        this.subs = {};
 	    }
 	    Router.prototype.genCallack = function (frame, pos) {
@@ -285,8 +263,12 @@
 	        var event = frame.event, args = frame.args;
 	        if (!event)
 	            return;
+	        // `.onevent()` wiretaps on all events, if it returns true no further routing is done.
+	        var stop_routing = false;
 	        if (this.onevent)
-	            this.onevent(event, args);
+	            stop_routing = !!this.onevent(event, args);
+	        if (stop_routing)
+	            return;
 	        var method;
 	        if (this.api)
 	            method = this.api.get(event);
@@ -336,12 +318,7 @@
 	            delete this.timer[id];
 	        }
 	    };
-	    Router.prototype.setApi = function (api) {
-	        this.api = api;
-	        return this;
-	    };
-	    // This function is called by user.
-	    Router.prototype.onmessage = function (msg) {
+	    Router.prototype.procMsg = function (msg) {
 	        var frame = new FrameIncoming;
 	        try {
 	            frame.unserialize(msg, this.genCallack.bind(this));
@@ -354,6 +331,26 @@
 	            this.processResponse(frame);
 	        else
 	            this.pub(frame);
+	    };
+	    Router.prototype.setApi = function (api) {
+	        this.api = api;
+	        return this;
+	    };
+	    // This function is called by user.
+	    Router.prototype.onmessage = function (msg) {
+	        // console.log('msg', msg);
+	        if (typeof msg != 'object')
+	            return;
+	        if (msg instanceof Array) {
+	            // if(!(msg.b instanceof Array)) return;
+	            // for(var fmsg of msg.b) super.onmessage(fmsg);
+	            for (var _i = 0, msg_1 = msg; _i < msg_1.length; _i++) {
+	                var fmsg = msg_1[_i];
+	                this.procMsg(fmsg);
+	            }
+	        }
+	        else
+	            this.procMsg(msg);
 	    };
 	    Router.prototype.on = function (event, callback) {
 	        // var list: TeventCallbackList = this.getSubList(event);
@@ -399,21 +396,6 @@
 	                _this.flush();
 	            }, this.cycle);
 	        }
-	    };
-	    RouterBuffered.prototype.onmessage = function (msg) {
-	        // console.log('msg', msg);
-	        if (typeof msg != 'object')
-	            return;
-	        if (msg instanceof Array) {
-	            // if(!(msg.b instanceof Array)) return;
-	            // for(var fmsg of msg.b) super.onmessage(fmsg);
-	            for (var _i = 0, msg_1 = msg; _i < msg_1.length; _i++) {
-	                var fmsg = msg_1[_i];
-	                _super.prototype.onmessage.call(this, fmsg);
-	            }
-	        }
-	        else
-	            _super.prototype.onmessage.call(this, msg);
 	    };
 	    return RouterBuffered;
 	}(Router));

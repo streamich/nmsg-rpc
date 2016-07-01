@@ -5,6 +5,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var util_1 = require('./util');
+var noop = function () { };
 // export interface IFrameDataBuffered {
 // b: FrameList; // B for bulk.
 // [i: number]: FrameList;
@@ -35,7 +36,7 @@ var Frame = (function () {
         return !!this.rid;
     };
     Frame.id = 0;
-    Frame.timeout = 5000; // Default timeout (in milliseconds), so that we don't send timeout value with every request.
+    Frame.timeout = 15000; // Default timeout (in milliseconds), so that we don't send timeout value with every request.
     return Frame;
 }());
 exports.Frame = Frame;
@@ -158,7 +159,8 @@ var Router = (function () {
         // List of frames (by ID) which had callbacks, we keep track of them to send back responses to callbacks, if received.
         this.frame = {};
         this.timer = {};
-        this.onerror = function () { };
+        this.onerror = noop;
+        this.onframe = noop;
         this.api = null;
         this.subs = {};
     }
@@ -219,7 +221,10 @@ var Router = (function () {
         if (frame.hasCallbacks()) {
             this.frame[frame.id] = frame;
             // Remove this frame after some timeout, if callbacks not called.
-            this.timer[frame.id] = setTimeout(function () { delete _this.frame[frame.id]; }, frame.timeout + this.latency);
+            this.timer[frame.id] = setTimeout(function () {
+                delete _this.frame[frame.id];
+                delete _this.timer[frame.id];
+            }, frame.timeout + this.latency);
         }
         var data = frame.serialize();
         // console.log('dispatch', data);
@@ -250,6 +255,7 @@ var Router = (function () {
             this.onerror(e);
             return;
         }
+        this.onframe(frame);
         if (frame.isResponse())
             this.processResponse(frame);
         else
@@ -299,7 +305,7 @@ var RouterBuffered = (function (_super) {
     function RouterBuffered() {
         _super.apply(this, arguments);
         this.cycle = 10; // Milliseconds for how long to buffer requests.
-        this.timer = 0;
+        this.cycleTimer = 0;
         this.buffer = [];
     }
     RouterBuffered.prototype.flush = function () {
@@ -313,9 +319,9 @@ var RouterBuffered = (function (_super) {
     };
     RouterBuffered.prototype.startTimer = function () {
         var _this = this;
-        if (!this.timer) {
-            this.timer = setTimeout(function () {
-                _this.timer = 0;
+        if (!this.cycleTimer) {
+            this.cycleTimer = setTimeout(function () {
+                _this.cycleTimer = 0;
                 _this.flush();
             }, this.cycle);
         }
