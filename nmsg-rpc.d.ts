@@ -58,6 +58,7 @@ declare module 'rpc' {
 	    send: (data) => void;
 	    onerror: (err) => void;
 	    onevent: (event: string, args: any[]) => boolean;
+	    onframe: (frame: FrameIncoming) => void;
 	    api: Api;
 	    protected subs: {
 	        [event: string]: TeventCallback;
@@ -71,11 +72,12 @@ declare module 'rpc' {
 	    setApi(api: Api): this;
 	    onmessage(msg: any): void;
 	    on(event: string, callback: TeventCallback): this;
+	    off(event: string): this;
 	    emit(event: string, ...args: any[]): this;
 	}
 	export class RouterBuffered extends Router {
 	    cycle: number;
-	    protected timer: any;
+	    protected cycleTimer: any;
 	    protected buffer: FrameList;
 	    protected flush(): void;
 	    protected sendData(data: any): void;

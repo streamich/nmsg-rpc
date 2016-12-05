@@ -289,6 +289,10 @@ var Router = (function () {
         this.subs[event] = callback;
         return this;
     };
+    Router.prototype.off = function (event) {
+        delete this.subs[event];
+        return this;
+    };
     Router.prototype.emit = function (event) {
         var args = [];
         for (var _i = 1; _i < arguments.length; _i++) {

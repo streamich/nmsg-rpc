@@ -314,6 +314,11 @@ export class Router {
         return this;
     }
 
+    off(event: string): this {
+        delete this.subs[event];
+        return this;
+    }
+
     emit(event: string, ...args: any[]): this {
         var frame = new FrameOutgoing(args, event);
         this.dispatch(frame);
