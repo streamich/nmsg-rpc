@@ -67,6 +67,7 @@ export class Router {
     setApi(api: Api): this;
     onmessage(msg: any): void;
     on(event: string, callback: TeventCallback): this;
+    off(event: string): this;
     emit(event: string, ...args: any[]): this;
 }
 export class RouterBuffered extends Router {
