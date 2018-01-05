@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "sockjs": "*"
+    "sockjs": "0.3.19"
   }
 }
